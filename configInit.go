@@ -13,11 +13,7 @@ import (
 	"strings"
 )
 
-type Config struct {
-	LogLevel       int32  `json:"LogLevel"`
-	ConfigFilePath string `json:"ConfigFilePath"`
-}
-
+// This is used to print the values of the config object
 func (this *Config) Show() {
 	val, _ := json.MarshalIndent(this, "", "\t")
 	fmt.Println("ServerConfig", string(val))
@@ -48,8 +44,8 @@ func (this *Config) setFromCmdArgs() (bool, error) {
 
 	// Log Level
 	var logLevel string
-	flag.StringVar(&logLevel, "logLevel", "Trace", "[ Trace / Info / Warn / Error ]")
-	flag.StringVar(&logLevel, "l", "Trace", "[ Trace / Info / Warn / Error ]")
+	flag.StringVar(&logLevel, "logLevel", "TRACE", "[ TRACE / INFO / WARN / ERROR ]")
+	flag.StringVar(&logLevel, "l", "TRACE", "[ TRACE / INFO / WARN / ERROR ]")
 
 	// Server IP
 	var ipIndex int = 0
@@ -74,6 +70,27 @@ func (this *Config) setFromCmdArgs() (bool, error) {
 	var port int
 	flag.IntVar(&port, "port", 7000, "Web Server Port No. to be used.")
 	flag.IntVar(&port, "p", 7000, "Web Server Port No. to be used.")
+
+	// Process Arguments and Flags
+	flag.Parse()
+
+	args := []string{}
+	flag.Visit(func(f *flag.Flag) {
+		args = append(args, f.Name)
+	})
+
+	for _, v := range args {
+		switch {
+		case v == "mode" || v == "m":
+			this.WebServer.Mode = mode
+		case v == "port" || v == "p":
+			this.WebServer.Port = int32(port)
+		case v == "serverIP" || v == "s":
+			this.MachineIp = ip[ipIndex]
+		case v == "logLevel" || v == "l":
+			this.LogConfig.Level = logLevel
+		}
+	}
 
 	return true, nil
 }

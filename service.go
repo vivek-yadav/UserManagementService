@@ -1,10 +1,21 @@
 package ums
 
-import "errors"
+import (
+	"errors"
+	"github.com/gin-gonic/contrib/gzip"
+	"github.com/gin-gonic/contrib/static"
+	"github.com/gin-gonic/gin"
+	"github.com/itsjamie/gin-cors"
+	"html/template"
+	"time"
+)
 
 type Service struct {
 	Config Config `json:"Config"`
+	Engine Engine
 }
+
+type Engine *gin.Engine
 
 // This returns a new Instance of User Management Service
 func NewInstance() (Service, error) {
@@ -34,6 +45,38 @@ func (this *Service) SetCmdArgs() (bool, error) {
 // This function is used to start-up the service with given settings or default settings
 func (this *Service) Start() (bool, error) {
 	this.Config.Show()
+	if r, err := this.initService(); r == false && err != nil {
+		return r, err
+	}
+	return true, nil
+}
+
+func (this *Service) initService() (bool, error) {
+	router := gin.New()
+
+	router.Use(gin.Logger())
+	router.Use(gin.Recovery())
+	router.Use(gzip.Gzip(gzip.DefaultCompression))
+	router.Use(static.Serve("/", static.LocalFile(this.Config.FrontEnd.ViewsPath, true)))
+	html, err := template.New("").Delims(this.Config.FrontEnd.TemplateDelimiterStart, this.Config.FrontEnd.TemplateDelimiterEnd).ParseGlob(this.Config.FrontEnd.TemplatesPath + "/**/*")
+	if err != nil {
+		return false, errors.New("ERROR : Failed to set Templates Path for Server : ( " + err.Error() + " )")
+	}
+	router.SetHTMLTemplate(html)
+
+	// Apply the middleware to the router (works with groups too)
+	router.Use(cors.Middleware(cors.Config{
+		Origins:         "*",
+		Methods:         "GET, PUT, POST, DELETE",
+		RequestHeaders:  "Origin, Authorization, Content-Type",
+		ExposedHeaders:  "",
+		MaxAge:          50 * time.Second,
+		Credentials:     true,
+		ValidateHeaders: false,
+	}))
+
+	this.Engine = Engine(router)
+
 	return true, nil
 }
 
