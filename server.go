@@ -11,7 +11,7 @@ func NewInstance() (Service, error) {
 	service := Service{}
 	result, err := service.Config.setEnvArgs()
 	if result == false && err != nil {
-		return nil, errors.New("ERROR : Environment Variables were not proper ( " + err.Error() + " )")
+		return service, errors.New("ERROR : Environment Variables were not proper ( " + err.Error() + " )")
 	}
 	return service, nil
 }
