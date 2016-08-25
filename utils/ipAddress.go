@@ -1,6 +1,9 @@
 package utils
 
-import "net"
+import (
+	"errors"
+	"net"
+)
 
 func ExternalIP() ([]string, error) {
 	ifaces, err := net.Interfaces()
