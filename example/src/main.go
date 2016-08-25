@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/vivek-yadav/UserManagementService"
+	"net/http"
 )
 
 func main() {
@@ -12,9 +14,9 @@ func main() {
 		fmt.Printf("Error in creating instance of ums service : ( %v ) \n", err.Error())
 		return
 	}
+	// Load Config
 	configFilePath := "example/config/umsConfig.toml"
-	r, err := service.SetConfigFile(configFilePath)
-	if r == false && err != nil {
+	if r, err := service.SetConfigFile(configFilePath); r == false && err != nil {
 		configFilePath := "config/umsConfig.toml"
 		r, err = service.SetConfigFile(configFilePath)
 		if r == false && err != nil {
@@ -22,15 +24,31 @@ func main() {
 			return
 		}
 	}
-	r, err = service.SetCmdArgs()
-	if r == false && err != nil {
+
+	// Load Command Line Args
+	if r, err := service.SetCmdArgs(); r == false && err != nil {
 		fmt.Printf("Error in setting configurations from file of ums service : (%v)  : ( %v )", configFilePath, err.Error())
 		return
 	}
 
-	r, err = service.Start()
-	if r == false && err != nil {
-		fmt.Printf("Error in Running ums service : (%v)  : ( %v )", configFilePath, err.Error())
+	router, err := service.GetRootRouter()
+	if err != nil {
+		fmt.Printf("Error in setting up Root Router :  ( %v )", err.Error())
 		return
 	}
+
+	router.GET("/user/:name", HelloUser)
+
+	service.Start()
+}
+
+func HelloUser(c *gin.Context) {
+	name := c.Param("name")
+	msg := "How have you been " + name + "?"
+	//c.String(http.StatusOK, "Hello %s", name)
+	c.HTML(http.StatusOK, "main/index.html", gin.H{
+		"title":    "Welcome " + name,
+		"userName": name,
+		"msg":      msg,
+	})
 }

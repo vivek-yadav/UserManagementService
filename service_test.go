@@ -29,11 +29,11 @@ func TestService_SetConfigFile(t *testing.T) {
 	if s.Config.AppName != "UserManagementService" && er != nil {
 		t.Errorf("ERROR : AppName did not match : ( %v  !=  %v)\n", s.Config.AppName, "UserManagementService")
 	}
-	if s.Config.FrontEnd.ViewsPath != "./front-end/dist" {
-		t.Errorf("ERROR : FrontEnd.ViewPath did not match : ( %v  !=  %v)\n", s.Config.FrontEnd.ViewsPath, "./front-end/dist")
+	if s.Config.FrontEnd.ViewsPath != "./front-end_test/dist" {
+		t.Errorf("ERROR : FrontEnd.ViewPath did not match : ( %v  !=  %v)\n", s.Config.FrontEnd.ViewsPath, "./front-end_test/dist")
 	}
-	if s.Config.FrontEnd.TemplatesPath != "./templates" {
-		t.Errorf("ERROR : FrontEnd.TemplatesPath did not match : ( %v  !=  %v)\n", s.Config.FrontEnd.TemplatesPath, "./templates")
+	if s.Config.FrontEnd.TemplatesPath != "./templates_test" {
+		t.Errorf("ERROR : FrontEnd.TemplatesPath did not match : ( %v  !=  %v)\n", s.Config.FrontEnd.TemplatesPath, "./templates_test")
 	}
 	if s.Config.FrontEnd.TemplateDelimiterStart != "<<" {
 		t.Errorf("ERROR : FrontEnd.TemplateDelimiterStart did not match : ( %v  !=  %v)\n", s.Config.FrontEnd.TemplateDelimiterStart, "<<")
@@ -99,23 +99,23 @@ func TestService_SetCmdArgs(t *testing.T) {
 	t.Logf("SUCCESS : In reading command line arguments : ( %v )\n", r)
 }
 
-func TestService_Start(t *testing.T) {
-	t.Log("Creating New Instance")
-	s, er := NewInstance()
-	if er != nil {
-		t.Errorf("ERROR: As the insttance was not generated : ( %v )\n", er.Error())
-	}
-
-	os.Args = []string{"cmd", "-port=8000"}
-
-	r, er := s.SetConfigFile("./config_test/umsConfig.toml")
-	if er != nil {
-		t.Errorf("ERROR : In reading config file : ( %v )\n", er.Error())
-	}
-
-	r, er = s.Start()
-	if er != nil {
-		t.Errorf("ERROR : In Starting UMS Server : ( %v )\n", er.Error())
-	}
-	t.Logf("SUCCESS : In Starting UMS Server : ( %v )\n", r)
-}
+//func TestService_Start(t *testing.T) {
+//	t.Log("Creating New Instance")
+//	s, er := NewInstance()
+//	if er != nil {
+//		t.Errorf("ERROR: As the insttance was not generated : ( %v )\n", er.Error())
+//	}
+//
+//	os.Args = []string{"cmd", "-port=8000"}
+//
+//	r, er := s.SetConfigFile("./config_test/umsConfig.toml")
+//	if er != nil {
+//		t.Errorf("ERROR : In reading config file : ( %v )\n", er.Error())
+//	}
+//
+//	r, er = s.Start()
+//	if er != nil {
+//		t.Errorf("ERROR : In Starting UMS Server : ( %v )\n", er.Error())
+//	}
+//	t.Logf("SUCCESS : In Starting UMS Server : ( %v )\n", r)
+//}

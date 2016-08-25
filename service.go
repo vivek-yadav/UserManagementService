@@ -2,6 +2,8 @@ package ums
 
 import (
 	"errors"
+	"fmt"
+	"github.com/braintree/manners"
 	"github.com/gin-gonic/contrib/gzip"
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
@@ -11,20 +13,19 @@ import (
 )
 
 type Service struct {
-	Config Config `json:"Config"`
-	Engine Engine
+	Config     Config `json:"Config"`
+	Engine     *gin.Engine
+	RootRouter *gin.RouterGroup
 }
 
-type Engine *gin.Engine
-
 // This returns a new Instance of User Management Service
-func NewInstance() (Service, error) {
+func NewInstance() (*Service, error) {
 	service := Service{}
 	result, err := service.Config.setEnvArgs()
 	if result == false && err != nil {
-		return service, errors.New("ERROR : Environment Variables were not proper ( " + err.Error() + " )")
+		return nil, errors.New("ERROR : Environment Variables were not proper ( " + err.Error() + " )")
 	}
-	return service, nil
+	return &service, nil
 }
 
 // This SetConfig function takes filePath of the config file
@@ -43,11 +44,30 @@ func (this *Service) SetCmdArgs() (bool, error) {
 }
 
 // This function is used to start-up the service with given settings or default settings
-func (this *Service) Start() (bool, error) {
+func (this *Service) Start() {
 	this.Config.Show()
+	r := make(chan bool)
+	go func(v chan bool) {
+		serverPort := fmt.Sprintf(":%v", this.Config.WebServer.Port)
+		manners.ListenAndServe(serverPort, this.Engine)
+		v <- true
+	}(r)
+	<-r
+}
+
+func (this *Service) GetRootRouter() (*gin.RouterGroup, error) {
 	if r, err := this.initService(); r == false && err != nil {
-		return r, err
+		return nil, err
 	}
+	if r, err := this.setupRootRouter(); r == false && err != nil {
+		return nil, err
+	}
+	return this.RootRouter, nil
+}
+
+// This function sets up the root routing
+func (this *Service) setupRootRouter() (bool, error) {
+	this.RootRouter = this.Engine.Group("/")
 	return true, nil
 }
 
@@ -75,7 +95,7 @@ func (this *Service) initService() (bool, error) {
 		ValidateHeaders: false,
 	}))
 
-	this.Engine = Engine(router)
+	this.Engine = router
 
 	return true, nil
 }
