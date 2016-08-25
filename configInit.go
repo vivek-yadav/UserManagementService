@@ -6,11 +6,11 @@ import (
 	"flag"
 	"fmt"
 	"github.com/naoina/toml"
+	"github.com/vivek-yadav/UserManagementService/utils"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
-	"utils"
 )
 
 type Config struct {
