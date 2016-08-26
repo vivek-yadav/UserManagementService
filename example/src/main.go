@@ -39,7 +39,7 @@ func main() {
 
 	router.GET("/user/:name", HelloUser)
 
-	service.Start()
+	service.Start(true)
 }
 
 func HelloUser(c *gin.Context) {

@@ -8,7 +8,9 @@ import (
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/itsjamie/gin-cors"
+	"github.com/vivek-yadav/UserManagementService/routes"
 	"html/template"
+	"net/http"
 	"time"
 )
 
@@ -44,15 +46,31 @@ func (this *Service) SetCmdArgs() (bool, error) {
 }
 
 // This function is used to start-up the service with given settings or default settings
-func (this *Service) Start() {
+// If you send isblocking true then the system waits for the server to end first before return
+// Else the call starts the server and returns, then it is up to you to hold the system to keep the
+// service running.
+func (this *Service) Start(isBlocking bool) {
+	var paths gin.RoutesInfo
+	this.RootRouter.GET("/_routes", func(c *gin.Context) {
+		c.JSON(http.StatusOK, paths)
+	})
+	paths = this.Engine.Routes()
 	this.Config.Show()
-	r := make(chan bool)
-	go func(v chan bool) {
-		serverPort := fmt.Sprintf(":%v", this.Config.WebServer.Port)
-		manners.ListenAndServe(serverPort, this.Engine)
-		v <- true
-	}(r)
-	<-r
+	if isBlocking {
+		r := make(chan bool)
+		go func(v chan bool) {
+			serverPort := fmt.Sprintf(":%v", this.Config.WebServer.Port)
+			manners.ListenAndServe(serverPort, this.Engine)
+			v <- true
+		}(r)
+		<-r
+	} else {
+		go func() {
+			serverPort := fmt.Sprintf(":%v", this.Config.WebServer.Port)
+			manners.ListenAndServe(serverPort, this.Engine)
+		}()
+	}
+
 }
 
 func (this *Service) GetRootRouter() (*gin.RouterGroup, error) {
@@ -68,6 +86,7 @@ func (this *Service) GetRootRouter() (*gin.RouterGroup, error) {
 // This function sets up the root routing
 func (this *Service) setupRootRouter() (bool, error) {
 	this.RootRouter = this.Engine.Group("/")
+	routes.Setup(this.RootRouter)
 	return true, nil
 }
 

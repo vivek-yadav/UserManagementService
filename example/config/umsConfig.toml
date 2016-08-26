@@ -1,8 +1,8 @@
 app_name="UserManagementService"
 
 [front_end]
-views_path="./example/front-end/dist"
-templates_path="./example/templates"
+views_path="./front-end/dist"
+templates_path="./templates"
 template_delimiter_start="<<"
 template_delimiter_end=">>"
 
