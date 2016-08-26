@@ -1,4 +1,4 @@
-package ums
+package config
 
 type Config struct {
 	AppName        string         `json:"AppName"`

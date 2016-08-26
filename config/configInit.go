@@ -1,4 +1,4 @@
-package ums
+package config
 
 import (
 	"encoding/json"
@@ -19,7 +19,7 @@ func (this *Config) Show() {
 	fmt.Println("ServerConfig", string(val))
 }
 
-func (this *Config) setFromFile(filePath string) (bool, error) {
+func (this *Config) SetFromFile(filePath string) (bool, error) {
 	if filePath == "" {
 		return true, nil
 	}
@@ -38,7 +38,7 @@ func (this *Config) setFromFile(filePath string) (bool, error) {
 	return true, nil
 }
 
-func (this *Config) setFromCmdArgs() (bool, error) {
+func (this *Config) SetFromCmdArgs() (bool, error) {
 	// To get list of external IP addresses
 	ip, _ := utils.ExternalIP()
 
@@ -95,6 +95,6 @@ func (this *Config) setFromCmdArgs() (bool, error) {
 	return true, nil
 }
 
-func (this *Config) setEnvArgs() (bool, error) {
+func (this *Config) SetEnvArgs() (bool, error) {
 	return true, nil
 }

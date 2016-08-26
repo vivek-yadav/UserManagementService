@@ -8,6 +8,8 @@ import (
 	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/itsjamie/gin-cors"
+	"github.com/vivek-yadav/UserManagementService/config"
+	"github.com/vivek-yadav/UserManagementService/db/mongo"
 	"github.com/vivek-yadav/UserManagementService/routes"
 	"html/template"
 	"net/http"
@@ -15,15 +17,16 @@ import (
 )
 
 type Service struct {
-	Config     Config `json:"Config"`
+	Config     config.Config `json:"Config"`
 	Engine     *gin.Engine
 	RootRouter *gin.RouterGroup
+	AuthDB     mongo.AuthDB
 }
 
 // This returns a new Instance of User Management Service
 func NewInstance() (*Service, error) {
 	service := Service{}
-	result, err := service.Config.setEnvArgs()
+	result, err := service.Config.SetEnvArgs()
 	if result == false && err != nil {
 		return nil, errors.New("ERROR : Environment Variables were not proper ( " + err.Error() + " )")
 	}
@@ -35,14 +38,14 @@ func NewInstance() (*Service, error) {
 // if some error occurs it throws error.
 // if no file is sent in filePath param then default settings are loaded
 func (this *Service) SetConfigFile(filePath string) (bool, error) {
-	return this.Config.setFromFile(filePath)
+	return this.Config.SetFromFile(filePath)
 }
 
 // This sets configuration from command line arguments.
 // Use this when you think your users might want to give command line arguments.
 // Call this after SetConfig if you want it to have more priority.
 func (this *Service) SetCmdArgs() (bool, error) {
-	return this.Config.setFromCmdArgs()
+	return this.Config.SetFromCmdArgs()
 }
 
 // This function is used to start-up the service with given settings or default settings
@@ -91,6 +94,11 @@ func (this *Service) setupRootRouter() (bool, error) {
 }
 
 func (this *Service) initService() (bool, error) {
+	if len(this.Config.AuthDatabases) > 0 {
+		this.AuthDB.Config = &this.Config.AuthDatabases[0]
+		this.AuthDB = this.AuthDB.Setup()
+	}
+
 	router := gin.New()
 
 	router.Use(gin.Logger())
