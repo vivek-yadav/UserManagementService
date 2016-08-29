@@ -1,0 +1,141 @@
+<div class="row">
+  <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-xs-12">
+    <ba-card title="Apps List" baCardClass="with-scroll table-panel">
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>App Name</th>
+              <th>Description</th>
+              <th>Token</th>
+              <th>TOC</th>
+              <th>TTL</th>
+              <th>
+                <table class="table-striped" style="width:100%">
+                  <thead>
+                    <tr>
+                      <th class="wd-12">Role</th>
+                      <th class="wd-15">Description</th>
+                      <th class="wd-15">Paths</th>
+                      <th class="wd-12">Actions</th>
+                    </tr>
+                  </thead>
+                </table>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let app of apps; let i = index">
+              <td>{{i+1}}</td>
+              <td>
+                <inline-edit title="Click to Edit" [value]="app.Name" [placeHolder]="'App Name'"  [isEdit]="app.isNew" (onUpdate)="updateApp(app,$event,'Name')"></inline-edit>
+              </td>
+              <td>
+                <inline-edit title="Click to Edit" [value]="app.Description" [placeHolder]="'Description'" [isEdit]="app.isNew" (onUpdate)="updateApp(app,$event,'Description')"></inline-edit>
+              </td>
+              <td>{{app.Token}}</td>
+              <td>{{app.TOC}}</td>
+              <td>
+                <inline-edit title="Click to Edit" [placeHolder]="'0y-0M-0d-0h-0m-0s'" [value]="app.TTL" [isEdit]="app.isNew" (onUpdate)="updateApp(app,$event,'TTL')"></inline-edit>
+              </td>
+              <td>
+                <table class="table-striped" style="width:100%">
+                  <tbody>
+                    <tr *ngFor="let role of app.Roles; let j = index">
+                      <td class="wd-12">
+                        <inline-edit title="Click to Edit" [value]="role.Name" [isEdit]="role.isNew" [placeHolder]="'Role Name'" (onUpdate)="updateApp(app,$event,'Roles',j,'Name')"></inline-edit>
+                      </td>
+                      <td class="wd-15">
+                        <inline-edit title="Click to Edit" [value]="role.Description" [isEdit]="role.isNew" [placeHolder]="'Description'" (onUpdate)="updateApp(app,$event,'Roles',j,'Description')"></inline-edit>
+                      </td>
+                      <td class="wd-12">
+                        <a data-toggle="modal" data-target="#pathsModal" (click)="setModalPaths(app,j,role.Paths)">view paths..</a>
+                      </td>
+                      <td class="wd-12">
+                        <button class="btn btn-xs btn-danger" title="delete role" (click)="deleteRole(app,j)"><i class="fa fa-close"></i></button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                      <td>
+                        <button class="btn btn-xs btn-primary" title="add role" (click)="addNewRole(app)"><i class="fa fa-plus"></i></button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td>
+                <button class="btn btn-xs btn-primary pull-right" title="add app" (click)="addNewApp()"><i class="fa fa-plus"></i> New App</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </ba-card>
+  </div>
+</div>
+
+<!-- Modal -->
+<div id="pathsModal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Paths</h4>
+      </div>
+      <div class="modal-body">
+        <div class="table-responsive">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Path</th>
+                <th>Access Level</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let path of viewPaths; let i = index">
+                <td [ngClass]="'level'+path.AccessLevel">{{i+1}}</td>
+                <td [ngClass]="'level'+path.AccessLevel">
+                  <inline-edit title="Click to Edit" [value]="path.Path" [isEdit]="path.isNew" [placeHolder]="'Path'" (onUpdate)="updateApp(viewPathsAddress.app,$event,'Roles',viewPathsAddress.roleIndex,'Paths',i,'Path')"></inline-edit>
+                </td>
+                <td [ngClass]="'level'+path.AccessLevel">
+                  <inline-edit title="Click to Edit" [type]="'number'" [value]="path.AccessLevel" [isEdit]="path.isNew" [placeHolder]="'Access Level'"
+                    (onUpdate)="updateApp(viewPathsAddress.app,$event,'Roles',viewPathsAddress.roleIndex,'Paths',i,'AccessLevel')"></inline-edit>
+                </td>
+                <td>
+                  <button class="btn btn-xs btn-danger" title="delete path" (click)="deletePath(viewPathsAddress.app,viewPathsAddress.roleIndex,i)">
+                    <i class="fa fa-close"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>
+                  <button class="btn btn-xs btn-primary" title="add path" (click)="addNewPath()"><i class="fa fa-plus"></i></button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-danger btn-sm" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
