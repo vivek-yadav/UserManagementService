@@ -1,0 +1,55 @@
+body .table th, .table td{
+  border: 0px;
+}
+
+body div a{
+ text-decoration: none;
+ color: white;
+ cursor: pointer;
+}
+body div a:hover{
+ text-decoration: none;
+ color: white;
+}
+.modal .modal-content{
+  background-color: #3d81c0;
+}
+
+td .form-control option{
+  color : black;
+}
+
+tr .wd-12{
+  width: 12%;
+}
+tr .wd-15{
+  width: 15%;
+}
+tr .wd-20{
+  width: 20%;
+}
+tr .wd-82{
+  width: 82%;
+}
+
+tr .level0{
+  color :  #ff0000;
+}
+tr .level1{
+  color : #ff3333;
+}
+tr .level2{
+  color : #ff8080;
+}
+tr .level3{
+  color : #99ff99;
+}
+tr .level4{
+  color : #66ff66;
+}
+tr .level5{
+  color : #33ff33;
+}
+tr .level6{
+  color : #00ff00;
+}
