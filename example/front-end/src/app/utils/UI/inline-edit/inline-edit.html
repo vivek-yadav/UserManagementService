@@ -1,0 +1,8 @@
+<div id="inlineEditWrapper">
+    <a (click)="edit(value)" class="input-class" [hidden]="isNotEditing()">{{ value }}</a>
+    <form #inlineEditForm class="inlineEditForm form-inline" [hidden]="isEditing()">
+        <div class="form-group">
+            <input #inputEle class="form-control form-control-sm" [(ngModel)]="value" name="value" [type] = "type" [placeholder] = "placeHolder" (focusout)="onUpdate(value)" />
+        </div>
+    </form>
+</div>
