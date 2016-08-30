@@ -2,7 +2,6 @@ package mongo
 
 import (
 	"fmt"
-	"github.com/goinggo/tracelog"
 	"gopkg.in/mgo.v2"
 	"strconv"
 	//"github.com/vivek-yadav/UserManagementService"
@@ -19,21 +18,44 @@ type AuthDB struct {
 	Config  *config.AuthDatabase
 }
 
-func (this AuthDB) Setup() AuthDB {
+var authdbI *AuthDB
+
+func GetAuthDB() (*AuthDB, error) {
+	if authdbI == nil {
+		return nil, errors.New("ERROR : No existing Connection to database")
+	}
+	return authdbI, nil
+}
+
+func (this *AuthDB) Connect() (*mgo.Session, error) {
+	if this.Session == nil {
+		s, er := this.Setup()
+		if er != nil {
+			return nil, errors.New("ERROR : Failed to Connect to Database : (\n\t" + "\n)")
+		}
+		this.Session = s.Session
+	}
+	return this.Session.Clone(), nil
+}
+
+func (this AuthDB) Setup() (AuthDB, error) {
 	if this.Session == nil {
 		var err error
 		url := "mongodb://" + this.Config.Ip + ":" + strconv.Itoa(int(this.Config.Port)) + "/" + this.Config.DatabaseName
+		fmt.Println("URL: ", url)
 		this.Session, err = mgo.Dial(url)
 		if err != nil {
 			er := this.startMongod()
 			if er != nil {
-				tracelog.Errorf(err, "auth", "Connect", fmt.Sprint("Could not connect to AuthDatabase...   :(   Please test if '", url, "' is running."))
+				//tracelog.Errorf(err, "auth", "Connect", fmt.Sprint("Could not connect to AuthDatabase...   :(   Please test if '", url, "' is running."))
+				return this, errors.New("ERROR : connection to database failed using " + url + " (\n\t" + err.Error() + ")")
+
 			}
 			return this.Setup()
 		}
+		authdbI = &this
 	}
-
-	return this
+	return this, nil
 }
 
 func (this AuthDB) startMongod() error {

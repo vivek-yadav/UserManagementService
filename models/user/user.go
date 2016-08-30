@@ -8,7 +8,7 @@ import (
 type Users []User
 
 type User struct {
-	Id       bson.ObjectId `bson:"_id,omitempty" json:"_id"`
+	Id       bson.ObjectId `bson:"_id,omitempty" json:"Id"`
 	Username string        `bson:"Username" json:"Username"`
 	Password string        `bson:"Password" json:"Password"`
 	Email    string        `bson:"Email" json:"Email"`
@@ -20,7 +20,7 @@ type User struct {
 }
 
 type AppAccess struct {
-	Id     bson.ObjectId `bson:"_id,omitempty" json:"_id"`
+	Id     bson.ObjectId `bson:"_id,omitempty" json:"Id"`
 	Token  string        `bson:"Token" json:"Token"`
 	TOC    time.Time     `bson:"TOC" json:"TOC"`
 	TTL    int64         `bson:"TTL" json:"TTL"`
@@ -29,7 +29,7 @@ type AppAccess struct {
 }
 
 type AppPath struct {
-	Id          bson.ObjectId `bson:"_id,omitempty" json:"_id"`
+	Id          bson.ObjectId `bson:"_id,omitempty" json:"Id"`
 	Path        string        `bson:"Path" json:"Path"`
 	AccessLevel int8          `bson:"AccessLevel" json:"AccessLevel"`
 }

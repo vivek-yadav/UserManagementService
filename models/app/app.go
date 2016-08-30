@@ -7,7 +7,7 @@ import (
 )
 
 type App struct {
-	Id          bson.ObjectId `bson:"_id,omitempty" json:"_id"`
+	Id          bson.ObjectId `bson:"_id,omitempty" json:"Id"`
 	Name        string        `bson:"Name" json:"Name"`
 	Description string        `bson:"Description" json:"Description"`
 	Token       string        `bson:"Token" json:"Token"`
@@ -17,7 +17,7 @@ type App struct {
 }
 
 type Role struct {
-	Id          bson.ObjectId    `bson:"_id,omitempty" json:"_id"`
+	Id          bson.ObjectId    `bson:"_id,omitempty" json:"Id"`
 	Name        string           `bson:"Name" json:"Name"`
 	Description string           `bson:"Description" json:"Description"`
 	Paths       []models.AppPath `bson:"AppPath" json:"AppPath"`

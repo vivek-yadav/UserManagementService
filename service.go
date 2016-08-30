@@ -10,6 +10,7 @@ import (
 	"github.com/itsjamie/gin-cors"
 	"github.com/vivek-yadav/UserManagementService/config"
 	"github.com/vivek-yadav/UserManagementService/db/mongo"
+	"github.com/vivek-yadav/UserManagementService/models/setting"
 	"github.com/vivek-yadav/UserManagementService/routes"
 	"html/template"
 	"net/http"
@@ -21,16 +22,22 @@ type Service struct {
 	Engine     *gin.Engine
 	RootRouter *gin.RouterGroup
 	AuthDB     mongo.AuthDB
+	Setting    settings.Setting
 }
 
+var serviceI *Service
+
 // This returns a new Instance of User Management Service
-func NewInstance() (*Service, error) {
-	service := Service{}
-	result, err := service.Config.SetEnvArgs()
-	if result == false && err != nil {
-		return nil, errors.New("ERROR : Environment Variables were not proper ( " + err.Error() + " )")
+func GetInstance() (*Service, error) {
+	if serviceI == nil {
+		service := Service{}
+		result, err := service.Config.SetEnvArgs()
+		if result == false && err != nil {
+			return nil, errors.New("ERROR : Environment Variables were not proper ( " + err.Error() + " )")
+		}
+		serviceI = &service
 	}
-	return &service, nil
+	return serviceI, nil
 }
 
 // This SetConfig function takes filePath of the config file
@@ -77,7 +84,7 @@ func (this *Service) Start(isBlocking bool) {
 }
 
 func (this *Service) GetRootRouter() (*gin.RouterGroup, error) {
-	if r, err := this.initService(); r == false && err != nil {
+	if r, err := this.InitService(); r == false && err != nil {
 		return nil, err
 	}
 	if r, err := this.setupRootRouter(); r == false && err != nil {
@@ -93,10 +100,18 @@ func (this *Service) setupRootRouter() (bool, error) {
 	return true, nil
 }
 
-func (this *Service) initService() (bool, error) {
+func (this *Service) InitService() (bool, error) {
 	if len(this.Config.AuthDatabases) > 0 {
 		this.AuthDB.Config = &this.Config.AuthDatabases[0]
-		this.AuthDB = this.AuthDB.Setup()
+		var er error
+		if this.AuthDB, er = this.AuthDB.Setup(); er != nil {
+			return false, errors.New("ERROR : Failed to conenct to AuthDatabase[0] (\n\t" + er.Error() + "\n)")
+		}
+		s, err := this.Setting.Get()
+		if err != nil {
+			return false, errors.New("ERROR : Failed to Get Settings of the UMS from database (\n\t" + err.Error() + "\n)")
+		}
+		this.Setting = s
 	}
 
 	router := gin.New()

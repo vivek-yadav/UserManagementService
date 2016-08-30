@@ -9,7 +9,7 @@ import (
 
 func main() {
 	fmt.Println("Sample User Management Service Running....")
-	service, err := ums.NewInstance()
+	service, err := ums.GetInstance()
 	if err != nil {
 		fmt.Printf("Error in creating instance of ums service : ( %v ) \n", err.Error())
 		return

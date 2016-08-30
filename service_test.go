@@ -7,7 +7,7 @@ import (
 
 func TestNewInstance(t *testing.T) {
 	t.Log("Creating new Instance\n")
-	s, er := NewInstance()
+	s, er := GetInstance()
 	if er != nil {
 		t.Errorf("ERROR: As the insttance was not generated : ( %v )\n", er.Error())
 	}
@@ -17,7 +17,7 @@ func TestNewInstance(t *testing.T) {
 
 func TestService_SetConfigFile(t *testing.T) {
 	t.Log("Creating New Instance")
-	s, er := NewInstance()
+	s, er := GetInstance()
 	if er != nil {
 		t.Errorf("ERROR: As the insttance was not generated : ( %v )\n", er.Error())
 	}
@@ -82,7 +82,7 @@ func TestService_SetConfigFile(t *testing.T) {
 
 func TestService_SetCmdArgs(t *testing.T) {
 	t.Log("Creating New Instance")
-	s, er := NewInstance()
+	s, er := GetInstance()
 	if er != nil {
 		t.Errorf("ERROR: As the insttance was not generated : ( %v )\n", er.Error())
 	}
