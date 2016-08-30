@@ -1,7 +1,7 @@
 package models
 
 type Result struct {
-	URI   string      `json:"URI"`
+	URL   string      `json:"URL"`
 	Data  interface{} `json:"Data"`
 	Page  int64       `json:"Page"`
 	Size  int64       `json:"Size"`

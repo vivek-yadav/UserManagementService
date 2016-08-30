@@ -19,7 +19,7 @@ func (this User) FindLoginUserWithEmail() (User, error) {
 	this.Password = ""
 
 	q := uc.Find(bson.M{"$and": []bson.M{{"Email": u}, {"Password": p}}})
-	q = q.Select(bson.M{"Password": 0, "Accesses": 0})
+	q = q.Select(bson.M{"Password": 0, "AppAccess": 0})
 
 	er := q.One(&this)
 
@@ -41,7 +41,7 @@ func (this User) FindLoginUserWithUsername() (User, error) {
 	this.Password = ""
 
 	q := uc.Find(bson.M{"$and": []bson.M{{"Username": u}, {"Password": p}}})
-	q = q.Select(bson.M{"Password": 0, "Accesses": 0})
+	q = q.Select(bson.M{"Password": 0, "AppAccess": 0})
 
 	er := q.One(&this)
 	if er != nil {
@@ -70,19 +70,24 @@ func (this User) GetById() (User, error) {
 }
 
 // This function is used to fetch all the users
-func (this Users) GetList(fields []string, page, size int64) (Users, int64, error) {
+func (this Users) GetList(fields []string, isExclude bool, andCond []map[string]string, orCond []map[string]string, page, size int64) (Users, int64, error) {
 	authDB, _ := mongo.GetAuthDB()
 	con, _ := authDB.Connect()
 	uc := con.DB("").C("users")
 
-	q := uc.Find(bson.M{})
-	q = q.Select(utils.Selector(fields...))
+	q := uc.Find(utils.GetBsonFindArray(andCond, orCond))
+	if isExclude {
+		q = q.Select(utils.Deselector(fields...))
+	} else {
+		q = q.Select(utils.Selector(fields...))
+	}
+
 	c, erc := q.Count()
 	if erc != nil {
 		return this, 0, errors.New("ERROR : Failed to Find Users (\n\t" + erc.Error() + "\n)")
 	}
 	total := int64(c)
-	if total < (page-1)*size {
+	if total/size < page-1 {
 		return this, 0, errors.New("ERROR : Failed to Find Users on this page or page limit reached")
 	}
 	q = q.Limit(int(size))
