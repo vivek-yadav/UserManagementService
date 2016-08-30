@@ -1,0 +1,43 @@
+
+step 1: import in ts file
+import {MultiselectDropdown, IMultiSelectOption, IMultiSelectSettings, IMultiSelectTexts} from '../../../../utils/UI/multiselect-dropdown/multiselect-dropdown.ts';
+
+
+step 2 : content inside class
+  //default select option ids list
+  private defaultOptions: Array<number> = [];
+  //settings
+  private multiSelectSettings: IMultiSelectSettings = {
+    checkedStyle: 'glyphicon',
+    showCheckAll: true,
+    showUncheckAll: true,
+    // pullRight: false,
+    enableSearch: true,
+    // checkedStyle: 'checkboxes',
+    // buttonClasses: 'btn btn-default',
+    // selectionLimit: 0,
+    // closeOnSelect: false,
+    // showCheckAll: true,
+    // showUncheckAll: true,
+    // dynamicTitleMaxItems: 3,
+    // maxHeight: '300px',
+  };
+  //texts
+  private multiSelectTexts: IMultiSelectTexts = {
+    defaultTitle: 'title'
+    // checkAll: 'Check all',
+    // uncheckAll: 'Uncheck all',
+    // checked: 'checked',
+    // checkedPlural: 'checked',
+    // searchPlaceholder: 'Search...',
+    // defaultTitle: 'Select',
+  };
+
+  //options
+  options: IMultiSelectOption[] = [{id:1,name:"option1"}];
+
+step 3: HTML
+
+<ss-multiselect-dropdown *ngIf="aliases.length>1" [options]="options" (selectedModel)="updateOptions($event)" [defaultModel]="defaultOptions"
+                [settings]="multiSelectSettings" [texts]="multiSelectAliasTexts"></ss-multiselect-dropdown>
+            
