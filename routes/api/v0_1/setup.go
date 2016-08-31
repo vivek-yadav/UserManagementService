@@ -7,8 +7,13 @@ import (
 
 func Setup(router *gin.RouterGroup) {
 	router.GET("/users", user.GetList)
+
+	router.GET("/user", user.Get)
 	router.GET("/user/:id", user.GetById)
+
+	router.POST("/users", user.PostUsers)
 
 	router.POST("/user/login", user.Login)
 	router.POST("/user", user.PostUser)
+
 }

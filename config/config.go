@@ -23,6 +23,7 @@ type AuthDatabase struct {
 	Ip           string `json:"Ip"`
 	Port         int32  `json:"Port"`
 	DatabaseName string `json:"DatabaseName"`
+	MaxBatchSize int32  `json:"MaxBatchSize"`
 }
 
 type FrontEnd struct {

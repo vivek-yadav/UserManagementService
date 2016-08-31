@@ -1,4 +1,4 @@
-package models
+package modelApi
 
 type Result struct {
 	URL   string      `json:"URL"`

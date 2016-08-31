@@ -3,6 +3,7 @@ package utils
 import (
 	"gopkg.in/mgo.v2/bson"
 	"strconv"
+	"strings"
 )
 
 func Selector(q ...string) (r bson.M) {
@@ -51,24 +52,55 @@ func GetBsonFindArray(and []map[string]string, or []map[string]string) (query bs
 		for key, value := range obj {
 			var er error
 			var rInt int64
+			var opr string = ""
+			if strings.HasPrefix(value, ">=") {
+				values := strings.Split(value, ">=")
+				opr = "$gte"
+				value = values[1]
+			} else if strings.HasPrefix(value, ">") {
+				values := strings.Split(value, ">")
+				opr = "$gt"
+				value = values[1]
+			} else if strings.HasPrefix(value, "<=") {
+				values := strings.Split(value, "<=")
+				opr = "$lte"
+				value = values[1]
+			} else if strings.HasPrefix(value, "<") {
+				values := strings.Split(value, "<")
+				opr = "$lt"
+				value = values[1]
+			}
+
 			rInt, er = strconv.ParseInt(value, 10, 64)
 			if er == nil {
-				andArray = append(andArray, bson.M{key: rInt})
+				if opr == "" {
+					andArray = append(andArray, bson.M{key: rInt})
+				} else {
+					andArray = append(andArray, bson.M{key: bson.M{opr: rInt}})
+				}
 				continue
 			}
 			var rBool bool
 			rBool, er = strconv.ParseBool(value)
 			if er == nil {
-				andArray = append(andArray, bson.M{key: rBool})
+				if opr == "" {
+					andArray = append(andArray, bson.M{key: rBool})
+				} else {
+					andArray = append(andArray, bson.M{key: bson.M{opr: rBool}})
+				}
 				continue
 			}
 			var rFloat float64
 			rFloat, er = strconv.ParseFloat(value, 64)
 			if er == nil {
-				andArray = append(andArray, bson.M{key: rFloat})
+				if opr == "" {
+					andArray = append(andArray, bson.M{key: rFloat})
+				} else {
+					andArray = append(andArray, bson.M{key: bson.M{opr: rFloat}})
+				}
 				continue
 			}
-			andArray = append(andArray, bson.M{key: value})
+			andArray = append(andArray, bson.M{key: bson.M{"$regex": value}})
 		}
 	}
 
@@ -76,25 +108,56 @@ func GetBsonFindArray(and []map[string]string, or []map[string]string) (query bs
 	for _, obj := range or {
 		for key, value := range obj {
 			var er error
-			var rInt int
-			rInt, er = strconv.Atoi(value)
+			var rInt int64
+			var opr string = ""
+			if strings.HasPrefix(value, ">") {
+				values := strings.Split(value, ">")
+				opr = "$gt"
+				value = values[1]
+			} else if strings.HasPrefix(value, ">=") {
+				values := strings.Split(value, ">=")
+				opr = "$gte"
+				value = values[1]
+			} else if strings.HasPrefix(value, "<") {
+				values := strings.Split(value, "<")
+				opr = "$lt"
+				value = values[1]
+			} else if strings.HasPrefix(value, "<=") {
+				values := strings.Split(value, "<=")
+				opr = "$lte"
+				value = values[1]
+			}
+
+			rInt, er = strconv.ParseInt(value, 10, 64)
 			if er == nil {
-				orArray = append(orArray, bson.M{key: rInt})
+				if opr == "" {
+					andArray = append(andArray, bson.M{key: rInt})
+				} else {
+					andArray = append(andArray, bson.M{key: bson.M{opr: rInt}})
+				}
 				continue
 			}
 			var rBool bool
 			rBool, er = strconv.ParseBool(value)
 			if er == nil {
-				orArray = append(orArray, bson.M{key: rBool})
+				if opr == "" {
+					andArray = append(andArray, bson.M{key: rBool})
+				} else {
+					andArray = append(andArray, bson.M{key: bson.M{opr: rBool}})
+				}
 				continue
 			}
 			var rFloat float64
 			rFloat, er = strconv.ParseFloat(value, 64)
 			if er == nil {
-				orArray = append(orArray, bson.M{key: rFloat})
+				if opr == "" {
+					andArray = append(andArray, bson.M{key: rFloat})
+				} else {
+					andArray = append(andArray, bson.M{key: bson.M{opr: rFloat}})
+				}
 				continue
 			}
-			orArray = append(orArray, bson.M{key: value})
+			andArray = append(andArray, bson.M{key: bson.M{"$regex": value}})
 		}
 	}
 

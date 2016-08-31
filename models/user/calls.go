@@ -3,9 +3,53 @@ package models
 import (
 	"errors"
 	"github.com/vivek-yadav/UserManagementService/db/mongo"
-	"github.com/vivek-yadav/UserManagementService/utils"
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
+
+func (this Users) DbFetchAll(q *mgo.Query) (interface{}, error) {
+	er := q.All(&this)
+	if er != nil {
+		return this, errors.New("ERROR : Failed to Find Users (\n\t" + er.Error() + "\n)")
+	}
+	return this, nil
+}
+
+func (this User) DbFetchOne(q *mgo.Query) (interface{}, error) {
+	er := q.One(&this)
+	if er != nil {
+		return this, errors.New("ERROR : Failed to Find User (\n\t" + er.Error() + "\n)")
+	}
+	return this, nil
+}
+
+func (this User) DbInsertOne(uc *mgo.Collection) (uu interface{}, er error) {
+	this.Id = bson.NewObjectId()
+
+	er = uc.Insert(this)
+	if er != nil {
+		er = errors.New("ERROR : Failed to insert User (\n\t" + er.Error() + "\n)")
+		return
+	}
+	uu = this
+	return
+}
+
+func (this Users) DbInsertAll(uc *mgo.Collection) (uu interface{}, er error) {
+	list := make([]interface{}, len(this))
+	for i, v := range this {
+		v.Id = bson.NewObjectId()
+		list[i] = v
+	}
+
+	er = uc.Insert(list...)
+	if er != nil {
+		er = errors.New("ERROR : Failed to insert Users (\n\t" + er.Error() + "\n)")
+		return
+	}
+	uu = list
+	return
+}
 
 // This function is used for login api calls.
 // this(User) is set with email and password before the call.
@@ -56,51 +100,7 @@ func (this User) IsAuth(AppToken string, accessLevel int8, url string) (User, er
 	return User{}, nil
 }
 
-// This function is used to fetch detils of a user by Id
-func (this User) GetById() (User, error) {
-	authDB, _ := mongo.GetAuthDB()
-	con, _ := authDB.Connect()
-	uc := con.DB("").C("users")
-
-	er := uc.Find(bson.M{"_id": this.Id}).One(&this)
-	if er != nil {
-		return this, errors.New("ERROR : Failed to Find User with id " + this.Id.Hex() + " (\n\t" + er.Error() + "\n)")
-	}
-	return this, nil
-}
-
-// This function is used to fetch all the users
-func (this Users) GetList(fields []string, isExclude bool, andCond []map[string]string, orCond []map[string]string, page, size int64) (Users, int64, error) {
-	authDB, _ := mongo.GetAuthDB()
-	con, _ := authDB.Connect()
-	uc := con.DB("").C("users")
-
-	q := uc.Find(utils.GetBsonFindArray(andCond, orCond))
-	if isExclude {
-		q = q.Select(utils.Deselector(fields...))
-	} else {
-		q = q.Select(utils.Selector(fields...))
-	}
-
-	c, erc := q.Count()
-	if erc != nil {
-		return this, 0, errors.New("ERROR : Failed to Find Users (\n\t" + erc.Error() + "\n)")
-	}
-	total := int64(c)
-	if total/size < page-1 {
-		return this, 0, errors.New("ERROR : Failed to Find Users on this page or page limit reached")
-	}
-	q = q.Limit(int(size))
-	q = q.Skip(int((page - 1) * size))
-	er := q.All(&this)
-	if er != nil {
-		return this, 0, errors.New("ERROR : Failed to Find Users (\n\t" + er.Error() + "\n)")
-	}
-	//	fmt.Println(this["Name"])
-	return this, total, nil
-}
-
-func (this User) CreateUser() (User, error) {
+func (this *User) Create() (User, error) {
 	authDB, _ := mongo.GetAuthDB()
 	con, _ := authDB.Connect()
 	uc := con.DB("").C("users")
@@ -109,7 +109,19 @@ func (this User) CreateUser() (User, error) {
 
 	er := uc.Insert(this)
 	if er != nil {
-		return this, errors.New("ERROR : Failed to insert User (\n\t" + er.Error() + "\n)")
+		return *this, errors.New("ERROR : Failed to insert User (\n\t" + er.Error() + "\n)")
 	}
-	return this, nil
+	return *this, nil
+}
+
+func (this *Users) Create() (Users, error) {
+	authDB, _ := mongo.GetAuthDB()
+	con, _ := authDB.Connect()
+	uc := con.DB("").C("users")
+
+	er := uc.Insert(this)
+	if er != nil {
+		return *this, errors.New("ERROR : Failed to insert User (\n\t" + er.Error() + "\n)")
+	}
+	return *this, nil
 }

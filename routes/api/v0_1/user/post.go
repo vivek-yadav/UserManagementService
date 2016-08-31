@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/vivek-yadav/UserManagementService/models/api"
 	"github.com/vivek-yadav/UserManagementService/models/user"
 	"net/http"
 )
@@ -13,9 +14,31 @@ func PostUser(c *gin.Context) {
 	u := models.User{}
 	//c.Bind(&u)
 	json.NewDecoder(c.Request.Body).Decode(&u)
-	u, _ = u.CreateUser()
-	fmt.Printf("%#v", u)
-	c.JSON(http.StatusOK, u)
+	uu, er := modelApi.Create("users", c, u)
+	if er != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    http.StatusBadRequest,
+			"message": er.Error(),
+		})
+		return
+	}
+	fmt.Printf("%#v", uu)
+	c.JSON(http.StatusOK, uu)
+}
+
+func PostUsers(c *gin.Context) {
+	u := models.Users{}
+	json.NewDecoder(c.Request.Body).Decode(&u)
+	uu, er := modelApi.CreateList("users", c, u)
+	if er != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    http.StatusBadRequest,
+			"message": er.Error(),
+		})
+		return
+	}
+	fmt.Printf("%#v", uu)
+	c.JSON(http.StatusOK, uu)
 }
 
 func Login(c *gin.Context) {
