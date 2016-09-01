@@ -45,6 +45,35 @@ func SelDeSel(sel []string, desel []string) (r bson.M) {
 	return
 }
 
+//
+//func UpdateBsonFromMap(mapModel map[string]interface{}) (data bson.M){
+//	data = bson.M{}
+//	for key, value := range mapModel {
+//		//var er error
+//		//var rInt int64
+//		//rInt, er = strconv.ParseInt(value, 10, 64)
+//		//if er == nil {
+//		//	data[key] = rInt
+//		//	continue
+//		//}
+//		//var rBool bool
+//		//rBool, er = strconv.ParseBool(value)
+//		//if er == nil {
+//		//	data[key]= rBool
+//		//	continue
+//		//}
+//		//var rFloat float64
+//		//rFloat, er = strconv.ParseFloat(value, 64)
+//		//if er == nil {
+//		//	data[key]= rFloat
+//		//	continue
+//		//}
+//		data[key] = value
+//	}
+//	data = bson.M{"$set":data}
+//	return
+//}
+
 func GetBsonFindArray(and []map[string]string, or []map[string]string) (query bson.M) {
 	query = bson.M{}
 	andArray := []bson.M{}

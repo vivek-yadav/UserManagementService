@@ -1,10 +1,11 @@
 package models
 
 import (
-	"github.com/vivek-yadav/UserManagementService/models/user"
 	"gopkg.in/mgo.v2/bson"
 	"time"
 )
+
+type Apps []App
 
 type App struct {
 	Id          bson.ObjectId `bson:"_id,omitempty" json:"Id"`
@@ -17,8 +18,12 @@ type App struct {
 }
 
 type Role struct {
-	Id          bson.ObjectId    `bson:"_id,omitempty" json:"Id"`
-	Name        string           `bson:"Name" json:"Name"`
-	Description string           `bson:"Description" json:"Description"`
-	Paths       []models.AppPath `bson:"AppPath" json:"AppPath"`
+	Name        string `bson:"Name" json:"Name"`
+	Description string `bson:"Description" json:"Description"`
+	Paths       []Path `bson:"Paths" json:"Paths"`
+}
+
+type Path struct {
+	Path        string `bson:"Path" json:"Path"`
+	AccessLevel int8   `bson:"AccessLevel" json:"AccessLevel"`
 }

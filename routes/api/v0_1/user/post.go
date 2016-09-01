@@ -14,7 +14,7 @@ func PostUser(c *gin.Context) {
 	u := models.User{}
 	//c.Bind(&u)
 	json.NewDecoder(c.Request.Body).Decode(&u)
-	uu, er := modelApi.Create("users", c, u)
+	uu, er := modelApi.InsertOne("users", u.DbInsertOne)
 	if er != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code":    http.StatusBadRequest,
@@ -22,14 +22,13 @@ func PostUser(c *gin.Context) {
 		})
 		return
 	}
-	fmt.Printf("%#v", uu)
 	c.JSON(http.StatusOK, uu)
 }
 
 func PostUsers(c *gin.Context) {
 	u := models.Users{}
 	json.NewDecoder(c.Request.Body).Decode(&u)
-	uu, er := modelApi.CreateList("users", c, u)
+	uu, er := modelApi.InsertAll("users", u.DbInsertAll)
 	if er != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code":    http.StatusBadRequest,
@@ -37,7 +36,6 @@ func PostUsers(c *gin.Context) {
 		})
 		return
 	}
-	fmt.Printf("%#v", uu)
 	c.JSON(http.StatusOK, uu)
 }
 
@@ -70,6 +68,5 @@ func Login(c *gin.Context) {
 		})
 		return
 	}
-	fmt.Println(u)
 	c.JSON(http.StatusOK, u)
 }

@@ -15,34 +15,175 @@ import (
 type ApiModel interface {
 	DbFetchOne(*mgo.Query) (interface{}, error)
 	DbInsertOne(*mgo.Collection) (interface{}, error)
-	//QueryResolverUpdate(*mgo.Query)(interface{},error)
+	DbUpdateOne(*mgo.Collection, bson.M, bson.M) (interface{}, error)
+	DbReplaceOne(*mgo.Collection, bson.M) (interface{}, error)
+	DbReplaceOneById(*mgo.Collection) (interface{}, error)
+	DbDeleteOne(*mgo.Collection) (interface{}, error)
 }
 type ApiModels interface {
 	DbFetchAll(*mgo.Query) (interface{}, error)
 	DbInsertAll(*mgo.Collection) (interface{}, error)
-	//QueryResolverUpdate(*mgo.Query)(interface{},error)
+	DbUpdateAll(*mgo.Collection, bson.M, bson.M) (interface{}, error)
+	DbReplaceAll(*mgo.Collection) (interface{}, error)
+	DbDeleteAll(*mgo.Collection) (interface{}, error)
 }
 
-func Create(collectionName string, c *gin.Context, model ApiModel) (uu interface{}, er error) {
+func ReplaceOneById(collectionName string, dbHandler func(*mgo.Collection) (interface{}, error)) (uu interface{}, er error) {
+	if er != nil {
+		return
+	}
+
+	uu, er = replaceOneByIdFromDB(collectionName, dbHandler)
+	if er != nil {
+		return
+	}
+	return
+}
+
+func replaceOneByIdFromDB(collectionName string, queryResolver func(*mgo.Collection) (interface{}, error)) (u interface{}, er error) {
 	authDB, _ := mongo.GetAuthDB()
 	con, _ := authDB.Connect()
 	uc := con.DB("").C(collectionName)
 
-	uu, er = model.DbInsertOne(uc)
+	u, er = queryResolver(uc)
+	if er != nil {
+		er = errors.New("ERROR : Failed to Replace All " + collectionName + " (\n\t" + er.Error() + "\n)")
+		return
+	}
 	return
 }
 
-func CreateList(collectionName string, c *gin.Context, model ApiModels) (uu interface{}, er error) {
+func ReplaceAll(collectionName string, dbHandler func(*mgo.Collection) (interface{}, error)) (uu interface{}, er error) {
+	if er != nil {
+		return
+	}
+
+	uu, er = replaceAllFromDB(collectionName, dbHandler)
+	if er != nil {
+		return
+	}
+	return
+}
+
+func replaceAllFromDB(collectionName string, queryResolver func(*mgo.Collection) (interface{}, error)) (interface{}, error) {
+	var u interface{}
+
 	authDB, _ := mongo.GetAuthDB()
 	con, _ := authDB.Connect()
 	uc := con.DB("").C(collectionName)
 
-	uu, er = model.DbInsertAll(uc)
+	u, er := queryResolver(uc)
+	if er != nil {
+		return u, errors.New("ERROR : Failed to Replace All " + collectionName + " (\n\t" + er.Error() + "\n)")
+	}
+	return u, nil
+}
+
+func ReplaceOne(collectionName string, c *gin.Context, dbHandler func(*mgo.Collection, bson.M) (interface{}, error)) (uu interface{}, er error) {
+
+	and := c.Query("and")
+	var andCond []map[string]string
+	if and != "" {
+		andBytes := []byte(and)
+		er = json.Unmarshal(andBytes, &andCond)
+	}
+
+	or := c.Query("or")
+	var orCond []map[string]string
+	if or != "" {
+		orBytes := []byte(or)
+		er = json.Unmarshal(orBytes, &orCond)
+	}
+
+	if er != nil {
+		return
+	}
+
+	uu, er = replaceOneFromDB(collectionName, dbHandler, andCond, orCond)
+	if er != nil {
+		return
+	}
 	return
 }
 
-//func GetList(collectionName string,c *gin.Context,queryResolver func(*mgo.Query)(interface{},error)) (r Result,er error){
-func GetList(collectionName string, c *gin.Context, model ApiModels) (r Result, er error) {
+func replaceOneFromDB(collectionName string, queryResolver func(*mgo.Collection, bson.M) (interface{}, error), andCond []map[string]string, orCond []map[string]string) (interface{}, error) {
+	var u interface{}
+
+	authDB, _ := mongo.GetAuthDB()
+	con, _ := authDB.Connect()
+	uc := con.DB("").C(collectionName)
+
+	find := utils.GetBsonFindArray(andCond, orCond)
+	u, er := queryResolver(uc, find)
+	if er != nil {
+		return u, errors.New("ERROR : Failed to Replace " + collectionName + " (\n\t" + er.Error() + "\n)")
+	}
+	return u, nil
+}
+
+func Update(collectionName string, c *gin.Context, updatedValues map[string]interface{}, dbHandler func(*mgo.Collection, bson.M, bson.M) (interface{}, error)) (uu interface{}, er error) {
+
+	and := c.Query("and")
+	var andCond []map[string]string
+	if and != "" {
+		andBytes := []byte(and)
+		er = json.Unmarshal(andBytes, &andCond)
+	}
+
+	or := c.Query("or")
+	var orCond []map[string]string
+	if or != "" {
+		orBytes := []byte(or)
+		er = json.Unmarshal(orBytes, &orCond)
+	}
+
+	if er != nil {
+		return
+	}
+
+	uu, er = updateFromDB(collectionName, dbHandler, andCond, orCond, updatedValues)
+
+	if er != nil {
+		return
+	}
+	return
+}
+
+func updateFromDB(collectionName string, queryResolver func(*mgo.Collection, bson.M, bson.M) (interface{}, error), andCond []map[string]string, orCond []map[string]string, updatedValues map[string]interface{}) (interface{}, error) {
+	var u interface{}
+
+	authDB, _ := mongo.GetAuthDB()
+	con, _ := authDB.Connect()
+	uc := con.DB("").C(collectionName)
+
+	find := utils.GetBsonFindArray(andCond, orCond)
+	update := bson.M{"$set": updatedValues}
+	u, er := queryResolver(uc, find, update)
+	if er != nil {
+		return u, errors.New("ERROR : Failed to Update " + collectionName + " (\n\t" + er.Error() + "\n)")
+	}
+	return u, nil
+}
+
+func InsertOne(collectionName string, dbHandler func(*mgo.Collection) (interface{}, error)) (uu interface{}, er error) {
+	authDB, _ := mongo.GetAuthDB()
+	con, _ := authDB.Connect()
+	uc := con.DB("").C(collectionName)
+
+	uu, er = dbHandler(uc)
+	return
+}
+
+func InsertAll(collectionName string, dbHandler func(*mgo.Collection) (interface{}, error)) (uu interface{}, er error) {
+	authDB, _ := mongo.GetAuthDB()
+	con, _ := authDB.Connect()
+	uc := con.DB("").C(collectionName)
+
+	uu, er = dbHandler(uc)
+	return
+}
+
+func FetchAll(collectionName string, c *gin.Context, dbHandler func(*mgo.Query) (interface{}, error)) (r Result, er error) {
 	//r := Result{}
 	var uu interface{}
 
@@ -90,9 +231,9 @@ func GetList(collectionName string, c *gin.Context, model ApiModels) (r Result, 
 	}
 
 	if len(exfields) > 0 {
-		uu, total, er = getListFromDB(collectionName, model.DbFetchAll, exfields, true, andCond, orCond, page, size)
+		uu, total, er = getListFromDB(collectionName, dbHandler, exfields, true, andCond, orCond, page, size)
 	} else {
-		uu, total, er = getListFromDB(collectionName, model.DbFetchAll, fields, false, andCond, orCond, page, size)
+		uu, total, er = getListFromDB(collectionName, dbHandler, fields, false, andCond, orCond, page, size)
 	}
 
 	if er != nil {
@@ -140,7 +281,7 @@ func getListFromDB(collectionName string, queryResolver func(*mgo.Query) (interf
 	return u, total, nil
 }
 
-func GetById(collectionName string, c *gin.Context, model ApiModel) (uu interface{}, er error) {
+func FetchById(collectionName string, c *gin.Context, dbHandler func(*mgo.Query) (interface{}, error)) (uu interface{}, er error) {
 
 	var fields []string
 	var exfields []string
@@ -164,9 +305,9 @@ func GetById(collectionName string, c *gin.Context, model ApiModel) (uu interfac
 	}
 
 	if len(exfields) > 0 {
-		uu, er = getByIdFromDB(collectionName, model.DbFetchOne, exfields, true, id)
+		uu, er = getByIdFromDB(collectionName, dbHandler, exfields, true, id)
 	} else {
-		uu, er = getByIdFromDB(collectionName, model.DbFetchOne, fields, false, id)
+		uu, er = getByIdFromDB(collectionName, dbHandler, fields, false, id)
 	}
 	if er != nil {
 		return
@@ -204,7 +345,7 @@ func getByIdFromDB(collectionName string, queryResolver func(*mgo.Query) (interf
 	return u, nil
 }
 
-func Get(collectionName string, c *gin.Context, model ApiModel) (uu interface{}, er error) {
+func FetchOne(collectionName string, c *gin.Context, dbHandler func(*mgo.Query) (interface{}, error)) (uu interface{}, er error) {
 
 	var fields []string
 	var exfields []string
@@ -237,9 +378,9 @@ func Get(collectionName string, c *gin.Context, model ApiModel) (uu interface{},
 	}
 
 	if len(exfields) > 0 {
-		uu, er = getFromDB(collectionName, model.DbFetchOne, exfields, true, andCond, orCond)
+		uu, er = getFromDB(collectionName, dbHandler, exfields, true, andCond, orCond)
 	} else {
-		uu, er = getFromDB(collectionName, model.DbFetchOne, fields, false, andCond, orCond)
+		uu, er = getFromDB(collectionName, dbHandler, fields, false, andCond, orCond)
 	}
 
 	if er != nil {

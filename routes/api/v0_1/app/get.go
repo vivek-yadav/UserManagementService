@@ -1,15 +1,15 @@
-package user
+package app
 
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/vivek-yadav/UserManagementService/models/api"
-	"github.com/vivek-yadav/UserManagementService/models/user"
+	"github.com/vivek-yadav/UserManagementService/models/app"
 	"net/http"
 )
 
 func GetList(c *gin.Context) {
-	u := models.Users{}
-	r, er := modelApi.FetchAll("users", c, u.DbFetchAll)
+	u := models.Apps{}
+	r, er := modelApi.FetchAll("apps", c, u.DbFetchAll)
 	if er != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code":    http.StatusBadRequest,
@@ -21,8 +21,8 @@ func GetList(c *gin.Context) {
 }
 
 func Get(c *gin.Context) {
-	u := models.User{}
-	r, er := modelApi.FetchOne("users", c, u.DbFetchOne)
+	u := models.App{}
+	r, er := modelApi.FetchOne("apps", c, u.DbFetchOne)
 	if er != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code":    http.StatusBadRequest,
@@ -34,8 +34,8 @@ func Get(c *gin.Context) {
 }
 
 func GetById(c *gin.Context) {
-	u := models.User{}
-	r, er := modelApi.FetchById("users", c, u.DbFetchOne)
+	u := models.App{}
+	r, er := modelApi.FetchById("apps", c, u.DbFetchOne)
 	if er != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code":    http.StatusBadRequest,
