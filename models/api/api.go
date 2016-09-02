@@ -16,8 +16,7 @@ type ApiModel interface {
 	DbFetchOne(*mgo.Query) (interface{}, error)
 	DbInsertOne(*mgo.Collection) (interface{}, error)
 	DbUpdateOne(*mgo.Collection, bson.M, bson.M) (interface{}, error)
-	DbReplaceOne(*mgo.Collection, bson.M) (interface{}, error)
-	DbReplaceOneById(*mgo.Collection) (interface{}, error)
+	DbReplaceOne(*mgo.Collection) (interface{}, error)
 	DbDeleteOne(*mgo.Collection) (interface{}, error)
 }
 type ApiModels interface {
@@ -28,24 +27,68 @@ type ApiModels interface {
 	DbDeleteAll(*mgo.Collection) (interface{}, error)
 }
 
-func ReplaceOneById(collectionName string, dbHandler func(*mgo.Collection) (interface{}, error)) (uu interface{}, er error) {
-	if er != nil {
+func DeleteOne(collectionName string, c *gin.Context) (er error) {
+	id := c.Query("id")
+	if id == "" {
+		id = c.Param("id")
+	}
+	var idHex bson.ObjectId
+	if bson.IsObjectIdHex(id) {
+		idHex = bson.ObjectIdHex(id)
+	} else {
+		er = errors.New("ERROR : Id is not proper")
 		return
 	}
 
-	uu, er = replaceOneByIdFromDB(collectionName, dbHandler)
+	authDB, _ := mongo.GetAuthDB()
+	con, _ := authDB.Connect()
+	defer con.Close()
+	uc := con.DB("").C(collectionName)
+	er = uc.RemoveId(idHex)
 	if er != nil {
+		er = errors.New("ERROR : Failed to Delete " + collectionName + " (\n\t" + er.Error() + "\n)")
 		return
 	}
 	return
 }
 
-func replaceOneByIdFromDB(collectionName string, queryResolver func(*mgo.Collection) (interface{}, error)) (u interface{}, er error) {
+func DeleteAll(collectionName string, c *gin.Context) (er error) {
+	var ids []string
+	c.Bind(&ids)
+	idHexs := make([]bson.ObjectId, len(ids))
+	for i, v := range ids {
+		if bson.IsObjectIdHex(v) {
+			idHexs[i] = bson.ObjectIdHex(v)
+		} else {
+			er = errors.New("ERROR : Id is not proper (" + v + ")")
+			return
+		}
+	}
+
 	authDB, _ := mongo.GetAuthDB()
 	con, _ := authDB.Connect()
+	defer con.Close()
+	uc := con.DB("").C(collectionName)
+	var info *mgo.ChangeInfo
+	info, er = uc.RemoveAll(bson.M{"_id": bson.M{"$in": idHexs}})
+	if er != nil {
+		er = errors.New("ERROR : Failed to Delete " + collectionName + " (\n\t" + er.Error() + "\n)")
+		return
+	}
+	if info.Removed == 0 {
+		er = errors.New("No of " + collectionName + " Removed :" + strconv.Itoa(info.Removed) + " Out matched " + collectionName + " : " + strconv.Itoa(info.Matched))
+		return
+	}
+	return
+}
+
+func ReplaceOne(collectionName string, dbHandler func(*mgo.Collection) (interface{}, error)) (uu interface{}, er error) {
+	authDB, _ := mongo.GetAuthDB()
+	con, _ := authDB.Connect()
+	defer con.Close()
 	uc := con.DB("").C(collectionName)
 
-	u, er = queryResolver(uc)
+	uu, er = dbHandler(uc)
 	if er != nil {
 		er = errors.New("ERROR : Failed to Replace All " + collectionName + " (\n\t" + er.Error() + "\n)")
 		return
@@ -70,6 +113,7 @@ func replaceAllFromDB(collectionName string, queryResolver func(*mgo.Collection)
 
 	authDB, _ := mongo.GetAuthDB()
 	con, _ := authDB.Connect()
+	defer con.Close()
 	uc := con.DB("").C(collectionName)
 
 	u, er := queryResolver(uc)
@@ -79,46 +123,30 @@ func replaceAllFromDB(collectionName string, queryResolver func(*mgo.Collection)
 	return u, nil
 }
 
-func ReplaceOne(collectionName string, c *gin.Context, dbHandler func(*mgo.Collection, bson.M) (interface{}, error)) (uu interface{}, er error) {
-
-	and := c.Query("and")
-	var andCond []map[string]string
-	if and != "" {
-		andBytes := []byte(and)
-		er = json.Unmarshal(andBytes, &andCond)
+func UpdateOneById(collectionName string, c *gin.Context, updatedValues map[string]interface{}) (uu interface{}, er error) {
+	id := c.Query("id")
+	if id == "" {
+		id = c.Param("id")
 	}
-
-	or := c.Query("or")
-	var orCond []map[string]string
-	if or != "" {
-		orBytes := []byte(or)
-		er = json.Unmarshal(orBytes, &orCond)
-	}
-
-	if er != nil {
+	var idHex bson.ObjectId
+	if bson.IsObjectIdHex(id) {
+		idHex = bson.ObjectIdHex(id)
+	} else {
+		er = errors.New("ERROR : Id is not proper")
 		return
 	}
-
-	uu, er = replaceOneFromDB(collectionName, dbHandler, andCond, orCond)
-	if er != nil {
-		return
-	}
-	return
-}
-
-func replaceOneFromDB(collectionName string, queryResolver func(*mgo.Collection, bson.M) (interface{}, error), andCond []map[string]string, orCond []map[string]string) (interface{}, error) {
-	var u interface{}
-
 	authDB, _ := mongo.GetAuthDB()
 	con, _ := authDB.Connect()
+	defer con.Close()
 	uc := con.DB("").C(collectionName)
-
-	find := utils.GetBsonFindArray(andCond, orCond)
-	u, er := queryResolver(uc, find)
+	update := bson.M{"$set": updatedValues}
+	er = uc.UpdateId(idHex, update)
 	if er != nil {
-		return u, errors.New("ERROR : Failed to Replace " + collectionName + " (\n\t" + er.Error() + "\n)")
+		er = errors.New("ERROR : Failed to Update " + collectionName + " (\n\t" + er.Error() + "\n)")
+		return
 	}
-	return u, nil
+	uu = updatedValues
+	return
 }
 
 func Update(collectionName string, c *gin.Context, updatedValues map[string]interface{}, dbHandler func(*mgo.Collection, bson.M, bson.M) (interface{}, error)) (uu interface{}, er error) {
@@ -154,6 +182,7 @@ func updateFromDB(collectionName string, queryResolver func(*mgo.Collection, bso
 
 	authDB, _ := mongo.GetAuthDB()
 	con, _ := authDB.Connect()
+	defer con.Close()
 	uc := con.DB("").C(collectionName)
 
 	find := utils.GetBsonFindArray(andCond, orCond)
@@ -168,6 +197,7 @@ func updateFromDB(collectionName string, queryResolver func(*mgo.Collection, bso
 func InsertOne(collectionName string, dbHandler func(*mgo.Collection) (interface{}, error)) (uu interface{}, er error) {
 	authDB, _ := mongo.GetAuthDB()
 	con, _ := authDB.Connect()
+	defer con.Close()
 	uc := con.DB("").C(collectionName)
 
 	uu, er = dbHandler(uc)
@@ -177,6 +207,7 @@ func InsertOne(collectionName string, dbHandler func(*mgo.Collection) (interface
 func InsertAll(collectionName string, dbHandler func(*mgo.Collection) (interface{}, error)) (uu interface{}, er error) {
 	authDB, _ := mongo.GetAuthDB()
 	con, _ := authDB.Connect()
+	defer con.Close()
 	uc := con.DB("").C(collectionName)
 
 	uu, er = dbHandler(uc)
@@ -190,6 +221,11 @@ func FetchAll(collectionName string, c *gin.Context, dbHandler func(*mgo.Query) 
 	var page, size, total int64
 	var fields []string
 	var exfields []string
+	var sorts []string
+	sort := c.Query("sort")
+	if sort != "" {
+		sorts = strings.Split(sort, ",")
+	}
 	//u := models.Users{}
 	field := c.Query("fields")
 	if field != "" {
@@ -231,9 +267,9 @@ func FetchAll(collectionName string, c *gin.Context, dbHandler func(*mgo.Query) 
 	}
 
 	if len(exfields) > 0 {
-		uu, total, er = getListFromDB(collectionName, dbHandler, exfields, true, andCond, orCond, page, size)
+		uu, total, er = getListFromDB(collectionName, dbHandler, exfields, true, sorts, andCond, orCond, page, size)
 	} else {
-		uu, total, er = getListFromDB(collectionName, dbHandler, fields, false, andCond, orCond, page, size)
+		uu, total, er = getListFromDB(collectionName, dbHandler, fields, false, sorts, andCond, orCond, page, size)
 	}
 
 	if er != nil {
@@ -250,11 +286,12 @@ func FetchAll(collectionName string, c *gin.Context, dbHandler func(*mgo.Query) 
 	return
 }
 
-func getListFromDB(collectionName string, queryResolver func(*mgo.Query) (interface{}, error), fields []string, isExclude bool, andCond []map[string]string, orCond []map[string]string, page, size int64) (interface{}, int64, error) {
+func getListFromDB(collectionName string, queryResolver func(*mgo.Query) (interface{}, error), fields []string, isExclude bool, sort []string, andCond []map[string]string, orCond []map[string]string, page, size int64) (interface{}, int64, error) {
 	var u interface{}
 
 	authDB, _ := mongo.GetAuthDB()
 	con, _ := authDB.Connect()
+	defer con.Close()
 	uc := con.DB("").C(collectionName)
 
 	q := uc.Find(utils.GetBsonFindArray(andCond, orCond))
@@ -272,6 +309,7 @@ func getListFromDB(collectionName string, queryResolver func(*mgo.Query) (interf
 	if total/size < page-1 {
 		return u, 0, errors.New("ERROR : Failed to Find " + collectionName + " on this page or page limit reached")
 	}
+	q = q.Sort(sort...)
 	q = q.Limit(int(size))
 	q = q.Skip(int((page - 1) * size))
 	u, er := queryResolver(q)
@@ -321,6 +359,7 @@ func getByIdFromDB(collectionName string, queryResolver func(*mgo.Query) (interf
 
 	authDB, _ := mongo.GetAuthDB()
 	con, _ := authDB.Connect()
+	defer con.Close()
 	uc := con.DB("").C(collectionName)
 	var idHex bson.ObjectId
 	if bson.IsObjectIdHex(id) {
@@ -394,6 +433,7 @@ func getFromDB(collectionName string, queryResolver func(*mgo.Query) (interface{
 
 	authDB, _ := mongo.GetAuthDB()
 	con, _ := authDB.Connect()
+	defer con.Close()
 	uc := con.DB("").C(collectionName)
 
 	q := uc.Find(utils.GetBsonFindArray(andCond, orCond))

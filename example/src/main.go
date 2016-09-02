@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/vivek-yadav/UserManagementService"
+	"github.com/vivek-yadav/UserManagementService/microServices/authService"
+	"github.com/vivek-yadav/UserManagementService/microServices/loginService"
 	"net/http"
+	"time"
 )
 
 func main() {
@@ -38,8 +41,21 @@ func main() {
 	}
 
 	router.GET("/user/:name", HelloUser)
-
-	service.Start(true)
+	var stop chan bool
+	go func() {
+		service.Start(false)
+		stop <- true
+	}()
+	go func() {
+		authService.StartService(":7002")
+		time.Sleep(50 * time.Millisecond)
+		loginService.StartService(":7001")
+		time.Sleep(5 * time.Millisecond)
+		stop <- true
+	}()
+	for i := 0; i < 2; i++ {
+		<-stop
+	}
 }
 
 func HelloUser(c *gin.Context) {

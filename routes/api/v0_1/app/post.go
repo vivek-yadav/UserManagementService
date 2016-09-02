@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func Post(c *gin.Context) {
+func PostOne(c *gin.Context) {
 	a := models.App{}
 	//c.Bind(&u)
 	json.NewDecoder(c.Request.Body).Decode(&a)
@@ -23,7 +23,7 @@ func Post(c *gin.Context) {
 	c.JSON(http.StatusOK, aa)
 }
 
-func Posts(c *gin.Context) {
+func PostAll(c *gin.Context) {
 	a := models.Apps{}
 	json.NewDecoder(c.Request.Body).Decode(&a)
 	aa, er := modelApi.InsertAll("apps", a.DbInsertAll)

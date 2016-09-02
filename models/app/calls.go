@@ -4,6 +4,7 @@ import (
 	"errors"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"strconv"
 )
 
 func (this App) DbFetchOne(q *mgo.Query) (interface{}, error) {
@@ -53,5 +54,46 @@ func (this Apps) DbInsertAll(uc *mgo.Collection) (uu interface{}, er error) {
 		return
 	}
 	uu = list
+	return
+}
+
+func (this App) DbUpdateOne(uc *mgo.Collection, sel bson.M, updates bson.M) (uu interface{}, er error) {
+	er = uc.Update(sel, updates)
+	if er != nil {
+		er = errors.New("ERROR : Failed to Update App (\n\t" + er.Error() + "\n)")
+		return
+	}
+	return
+}
+
+func (this Apps) DbUpdateAll(uc *mgo.Collection, sel bson.M, updates bson.M) (uu interface{}, er error) {
+	var changes *mgo.ChangeInfo
+	changes, er = uc.UpdateAll(sel, updates)
+	if er != nil {
+		er = errors.New("ERROR : Failed to Update Apps (\n\t" + er.Error() + "\n ) Changes : Matched (" + strconv.Itoa(changes.Matched) + ")  Updated (" + strconv.Itoa(changes.Updated) + ") Removed (" + strconv.Itoa(changes.Removed) + ")")
+		return
+	}
+	return
+}
+
+func (this Apps) DbReplaceAll(uc *mgo.Collection) (uu interface{}, er error) {
+	for _, v := range this {
+		er = uc.UpdateId(v.Id, v)
+		if er != nil {
+			er = errors.New("ERROR : Failed to Update Apps (\n\t" + er.Error() + "\n)")
+			return
+		}
+	}
+	uu = this
+	return
+}
+
+func (this App) DbReplaceOne(uc *mgo.Collection) (uu interface{}, er error) {
+	er = uc.UpdateId(this.Id, this)
+	if er != nil {
+		er = errors.New("ERROR : Failed to Update App (\n\t" + er.Error() + "\n)")
+		return
+	}
+	uu = this
 	return
 }
