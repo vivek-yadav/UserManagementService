@@ -48,7 +48,7 @@ func (this AuthRequest) IsAuth(req *AuthRequest, result *bool) (er error) {
 				{"Email": req.Email},
 				{"AppAccess.Token": req.AppToken},
 				{"AppAccess.Paths.Path": bson.M{"$in": patterns}},
-				{"AppAccess.Paths.AccessLevel": bson.M{"$gt": req.AccessLevel}},
+				{"AppAccess.Paths.AccessLevel": bson.M{"$gte": req.AccessLevel}},
 			},
 			},
 		).One(&user)
@@ -58,7 +58,7 @@ func (this AuthRequest) IsAuth(req *AuthRequest, result *bool) (er error) {
 				{"Username": req.Username},
 				{"AppAccess.Token": req.AppToken},
 				{"AppAccess.Paths.Path": bson.M{"$in": patterns}},
-				{"AppAccess.Paths.AccessLevel": bson.M{"$gt": req.AccessLevel}},
+				{"AppAccess.Paths.AccessLevel": bson.M{"$gte": req.AccessLevel}},
 			},
 			},
 		).One(&user)
