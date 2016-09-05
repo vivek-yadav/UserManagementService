@@ -121,6 +121,7 @@ func (this User) IsLogin(self *User, result *bool) error {
 	if er != nil {
 		return errors.New("ERROR : Failed to Find User (\n\t" + er.Error() + "\n)")
 	}
+	*result = true
 	return nil
 }
 

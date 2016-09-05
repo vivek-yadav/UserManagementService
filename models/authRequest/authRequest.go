@@ -9,11 +9,11 @@ import (
 )
 
 type AuthRequest struct {
-	Username    string
-	Email       string
-	AppToken    string
-	AccessLevel int8
-	Path        string
+	Username    string `json:"Username"`
+	Email       string `json:"Email"`
+	AppToken    string `json:"AppToken"`
+	AccessLevel int    `json:"AccessLevel"`
+	Path        string `json:"Path"`
 }
 
 func (this AuthRequest) IsAuth(req *AuthRequest, result *bool) (er error) {

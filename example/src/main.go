@@ -47,10 +47,11 @@ func main() {
 		stop <- true
 	}()
 	go func() {
-		authService.StartService(":7002")
-		time.Sleep(50 * time.Millisecond)
 		loginService.StartService(":7001")
 		time.Sleep(5 * time.Millisecond)
+		authService.StartService(":7002")
+		time.Sleep(50 * time.Millisecond)
+
 		stop <- true
 	}()
 	for i := 0; i < 2; i++ {
