@@ -7,7 +7,7 @@ import (
 )
 
 func DeleteOne(c *gin.Context) {
-	er := modelApi.DeleteOne("apps", c)
+	er := modelApi.DeleteOne("users", c)
 	if er != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code":    http.StatusBadRequest,
@@ -19,7 +19,7 @@ func DeleteOne(c *gin.Context) {
 }
 
 func DeleteAll(c *gin.Context) {
-	er := modelApi.DeleteAll("apps", c)
+	er := modelApi.DeleteAll("users", c)
 	if er != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code":    http.StatusBadRequest,

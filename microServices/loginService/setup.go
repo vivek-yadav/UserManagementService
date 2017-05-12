@@ -43,7 +43,7 @@ func StartService(hostPort string) (e error) {
 		for {
 			conn, err := listener.Accept()
 			if err != nil {
-				continue
+				return
 			}
 			rpc.ServeConn(conn)
 		}
